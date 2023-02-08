@@ -4,8 +4,8 @@ import axios from "axios";
 
 
 export const Register = (props) => {
-    const [email, setEmail] = useState('');
-    const [pass, setPass] = useState('');
+    const [email, setEmail] = useState("");
+    const [password, setPass] = useState("");
     const [register, setRegister] = useState(false);
 
 
@@ -13,10 +13,10 @@ export const Register = (props) => {
         e.preventDefault();
         const configuration = {
             method: "post",
-            url: "localhost:3000/register",
+            url: "/register",
             data: {
               email,
-              pass,
+              password,
             },
           };
     axios(configuration)
@@ -25,13 +25,11 @@ export const Register = (props) => {
     setRegister(true);
     })
     .catch((error) => {
+        console.error(error);
         error = new Error();
     });
 };
   
-        
-
-    
     return (
         <div className="auth-form-container">
             <h2>Register</h2>
@@ -52,7 +50,7 @@ export const Register = (props) => {
                     <Form.Control
                         type="password"
                         name="password"
-                        value={pass}
+                        value={password}
                         onChange={(e) => setPass(e.target.value)}
                         placeholder="Enter Password"
                     />
@@ -66,6 +64,7 @@ export const Register = (props) => {
                     Register
                 </Button>
 
+                {/* display success message */}
                 {register ? (
                     <p className="text-success">You Are Registered Successfully</p>
                     ) : (

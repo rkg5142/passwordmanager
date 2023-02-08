@@ -1,38 +1,16 @@
-// server/main.js
-
-const express = require('express');
-const bodyParser = require('body-parser');
-const PORT = process.env.PORT || 3001;
+const express = require("express");
 const app = express();
+const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const auth = require("./auth");
-const path = require('path');
 
-
-// require database connection 
+// require database connection
 const dbConnect = require("./db/dbConnect");
 const User = require("./db/userModel");
+const auth = require("./auth");
 
-// execute database connection 
+// execute database connection
 dbConnect();
-
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, '../public', 'index.html'));
-});
-
-app.use((req, res, next) => {
-  if (/(.ico|.js|.css|.jpg|.png|.map)$/i.test(req.path)) {
-      next();
-  } else {
-      res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
-      res.header('Expires', '-1');
-      res.header('Pragma', 'no-cache');
-      res.sendFile(path.join(__dirname, '../src', 'index.html'));
-  }
-});
-app.use(express.static(path.join(__dirname, '../src', 'index.js')));
-
 
 // Curb Cores Error by adding a header here
 app.use((req, res, next) => {
@@ -48,18 +26,14 @@ app.use((req, res, next) => {
   next();
 });
 
+// body parser configuration
 app.use(bodyParser.json());
-  app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get("/", (request, response, next) => {
   response.json({ message: "Hey! This is your server response!" });
   next();
 });
-
-app.listen(PORT, () => {
-  console.log(`Server listening on ${PORT}`);
-});
-
 
 // register endpoint
 app.post("/register", (request, response) => {
@@ -139,7 +113,7 @@ app.post("/login", (request, response) => {
             token,
           });
         })
-        // catch error if password does not match
+        // catch error if password do not match
         .catch((error) => {
           response.status(400).send({
             message: "Passwords does not match",
@@ -163,7 +137,9 @@ app.get("/free-endpoint", (request, response) => {
 
 // authentication endpoint
 app.get("/auth-endpoint", auth, (request, response) => {
-  response.json({ message: "You are authorized to access me" });
+  response.send({ message: "You are authorized to access me" });
 });
 
-module.exports = app;
+const PORT = process.env.PORT || 8080;
+  
+app.listen(PORT, console.log(`Server started on port ${PORT}`));
