@@ -3,7 +3,7 @@ import { Form, Button } from "react-bootstrap";
 import axios from "axios";
 
 
-export const Register = (props) => {
+export default function Register () {
     const [email, setEmail] = useState("");
     const [password, setPass] = useState("");
     const [register, setRegister] = useState(false);
@@ -71,7 +71,6 @@ export const Register = (props) => {
                     <p className="text-danger">You Are Not Registered</p>
                     )}
             </Form>
-        <Button className="link-btn" onClick={() => props.onFormSwitch('login')}> If you already have an account, login here.</Button>
     </div>
     );
 }
