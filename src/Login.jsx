@@ -33,7 +33,7 @@ export default function Login () {
             path: "/",
           });
         // redirect user to the auth page
-        window.location.href = "/auth";
+        window.location.href = "/auth-endpoint";
 
         })
         .catch((error) => {

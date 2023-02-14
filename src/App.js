@@ -19,9 +19,8 @@ function App() {
           <Route path= "/register" element={<Register/>} />
           <Route path="/account" element={<Account/>} />
           <Route path="/free" element={<FreeComponent/>} />
-          <Route exact path="/" element={<ProtectedRoutes/>}>
-            <Route exact path="/" element={<AuthComponent/>}/>
-          </Route>
+          <Route element={<ProtectedRoutes />} />
+            <Route path="/auth-endpoint" element={<AuthComponent/>} />
         </Routes>
     </div>
   );

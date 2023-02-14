@@ -34,4 +34,6 @@ export default function ProtectedRoutes({ component: Component, ...rest }) {
       }}
     />
   );
-}
+};
+
+
