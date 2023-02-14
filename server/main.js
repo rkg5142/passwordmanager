@@ -4,10 +4,15 @@ const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+//enable logging 
+const winston = require('winston');
+
 // require database connection
 const dbConnect = require("./db/dbConnect");
 const User = require("./db/userModel");
+const Secrets = require("./db/secretsModel")
 const auth = require("./auth");
+
 
 // execute database connection
 dbConnect();
@@ -138,6 +143,43 @@ app.get("/free-endpoint", (request, response) => {
 // authentication endpoint
 app.get("/auth-endpoint", auth, (request, response) => {
   response.send({ message: "You are authorized to access me" });
+});
+
+// add a new endpoint to save password information
+app.post("/savePassword", auth, (request, response) => {
+  const { name, url, password } = request.body;
+  const userId = request.user.userId;
+
+  const token = request.headers.authorization.split(" ")[1];
+
+  try {
+    const decodedToken = jwt.verify(token, "RANDOM-TOKEN");
+    const userIdFromToken = decodedToken.userId;
+
+    if (userIdFromToken === userId) {
+      // user is authenticated and authorized, handle the request
+      // save password information here
+      const secret = new Secrets({
+        name: request.body.name,
+        url: request.body.url,
+        password: request.body.password,
+      });
+
+      secret
+        .save()
+          response.status(200).send({
+            message: "Password information saved successfully",
+      });
+      } else {
+      response.status(401).send({
+        message: "Unauthorized",
+      });
+    }
+  } catch (error) {
+    response.status(401).send({
+      message: "Invalid token",
+    });
+  }
 });
 
 const PORT = process.env.PORT || 8080;
