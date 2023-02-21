@@ -4,6 +4,16 @@ const bodyParser = require("body-parser");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
+const cors = require("cors");
+
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
 //enable logging 
 const winston = require('winston');
 
@@ -135,16 +145,6 @@ app.post("/login", (request, response) => {
     });
 });
 
-// free endpoint
-app.get("/free-endpoint", (request, response) => {
-  response.json({ message: "You are free to access me anytime" });
-});
-
-// authentication endpoint
-app.get("/auth-endpoint", auth, (request, response) => {
-  response.send({ message: "You are authorized to access me" });
-});
-
 // add a new endpoint to save password information
 app.post("/savePassword", auth, (request, response) => {
   const { name, url, password } = request.body;
@@ -165,12 +165,54 @@ app.post("/savePassword", auth, (request, response) => {
         password: request.body.password,
       });
 
-      secret
-        .save()
-          response.status(200).send({
-            message: "Password information saved successfully",
+      secret.save().then(() => {
+        response.status(200).send({
+          message: "Password information saved successfully",
+        });
+      }).catch((error) => {
+        response.status(500).send({
+          message: "Error saving password information",
+          error,
+        });
       });
       } else {
+      response.status(401).send({
+        message: "Unauthorized",
+      });
+    }
+  } catch (error) {
+    response.status(401).send({
+      message: "Invalid token",
+    });
+  }
+});
+
+// add a new endpoint to get password information by name
+app.post("/getPassword", auth, (request, response) => {
+  const { name } = request.body;
+  const userId = request.user.userId;
+
+  const token = request.headers.authorization.split(" ")[1];
+
+  try {
+    const decodedToken = jwt.verify(token, "RANDOM-TOKEN");
+    const userIdFromToken = decodedToken.userId;
+
+    if (userIdFromToken === userId) {
+      // user is authenticated and authorized, handle the request
+      // find password information by name
+      Secrets.findOne({ name }, (err, secret) => {
+        if (err || !secret) {
+          response.status(404).send({
+            message: "Password information not found",
+          });
+        } else {
+          response.status(200).send({
+            password: secret.password,
+          });
+        }
+      });
+    } else {
       response.status(401).send({
         message: "Unauthorized",
       });
