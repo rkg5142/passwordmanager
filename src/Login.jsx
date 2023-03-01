@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Form, Button } from "react-bootstrap";
 import Cookies from "universal-cookie";
-import { hashPassword } from "./crypto";
+import { hashPassword, generateKey } from "./crypto";
 import { Link } from 'react-router-dom';
+import CryptoJS from "crypto-js";
 
 const cookies = new Cookies();
 
@@ -15,8 +16,17 @@ export default function Login() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Hash the password before sending to server
-    const hashedPassword = hashPassword(password);
+    //To-do: create key from pwd and store in client
+    // var salt = CryptoJS.lib.WordArray.random(128/8);
+
+    // // Derive a decryption key from the user's password using PBKDF2
+    // var key = generateKey({email, password, salt});
+
+    // // Store the decryption key and salt in localStorage
+    // localStorage.setItem("KEY", key);
+
+    // // Hash the password before sending to server
+    // const hashedPassword = hashPassword(password);
 
     const configuration = {
       method: "post",
@@ -35,6 +45,12 @@ export default function Login() {
         cookies.set("TOKEN", result.data.token, {
           path: "/",
         });
+
+        //
+        const key = hashPassword(password);
+
+        localStorage.setItem("KEY", key);
+
         // redirect user to the auth page
         window.location.href = "/getPassword";
       })

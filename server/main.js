@@ -21,7 +21,6 @@ const winston = require('winston');
 // require database connection
 const dbConnect = require("./db/dbConnect");
 const User = require("./db/userModel");
-const Secrets = require("./db/secretsModel")
 const auth = require("./auth");
 const secretsModel = require("./db/secretsModel");
 
@@ -135,92 +134,43 @@ app.post("/login", (request, response) => {
 });
 
 // add a new endpoint to save password information
-app.post("/savePassword", auth, (request, response) => {
+app.post("/savePassword", auth, async (request, response) => {
   const { name, url, password } = request.body;
   const userId = request.user.userId;
 
   const token = request.headers.authorization.split(" ")[1];
 
-  try {
     const decodedToken = jwt.verify(token, "RANDOM-TOKEN");
     const userIdFromToken = decodedToken.userId;
 
-    if (userIdFromToken === userId) {
-      // user is authenticated and authorized, handle the request
-      // save password information here
-      const secret = new Secrets({
-        name: request.body.name,
-        url: request.body.url,
-        password: request.body.password,
-        userId: userId,
-      });
-      console.log(secret)
+      const secret = await User.findByIdAndUpdate(
+        userId,
+        {
+          $push: {
+            secrets: {name, url, password}
+          }
+        },
+        {new: true}
+      );
+      response.send(secret);
+    }); 
 
-      secret.save().then(() => {
-        response.status(200).send({
-          message: "Password information saved successfully",
-        });
-      }).catch((error) => {
-        response.status(500).send({
-          message: "Error saving password information",
-          error,
-        });
-      });
-      } else {
-      response.status(401).send({
-        message: "Unauthorized",
-      });
-    }
-  } catch (error) {
-    response.status(401).send({
-      message: "Invalid token",
-    });
-  }
-});
 
-app.post("/getPassword", auth, (request, response) => {
+
+app.post("/getPassword", auth, async (request, response) => {
   const { name } = request.body;
   const userId = request.user.userId;
 
   const token = request.headers.authorization.split(" ")[1];
+  const user = await User.findById(userId);
 
-  try {
-    const decodedToken = jwt.verify(token, "RANDOM-TOKEN");
-    const userIdFromToken = decodedToken.userId;
-
-    if (userIdFromToken === userId) {
-      // user is authenticated and authorized, handle the request
-      // query the database for the password information
-      Secrets.findOne({ name: name, userId: userId }, (error, result) => {
-        if (error) {
-          response.status(500).send({
-            message: "Error getting password information",
-            error,
-          });
-        } else if (!result) {
-          response.status(404).send({
-            message: "Password information not found",
-          });
-        } else {
-          // return the password information
-          response.status(200).send({
-            message: "Password information retrieved successfully",
-            name: result.name,
-            url: result.url,
-            password: result.password,
-          });
-        }
-      });
-    } else {
-      response.status(401).send({
-        message: "Unauthorized",
-      });
-    }
-  } catch (error) {
-    response.status(401).send({
-      message: "Invalid token",
-    });
+  const secret = user.secrets.find(secret => secret.name === name);
+  if (!secret) {
+    return response.status(404).send("Secret not found");
   }
+
+  response.send(secret);
+
 });
 
 const PORT = process.env.PORT || 8080;

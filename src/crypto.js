@@ -5,7 +5,7 @@ function hashPassword(password) {
   return String(SHA256(password));
 }
 
-function generateVaultKey({ email, hashedPassword, salt }) {
+function generateKey({ email, hashedPassword, salt }) {
   return pbkdf2(`${email}:${hashedPassword}`, salt, {
     keySize: 32,
   }).toString();
@@ -26,4 +26,4 @@ function encryptVault({ vaultKey, vault }) {
   return AES.encrypt(vault, vaultKey).toString();
 }
 
-export { hashPassword, generateVaultKey, decryptVault, encryptVault };
+export { hashPassword, generateKey, decryptVault, encryptVault };
