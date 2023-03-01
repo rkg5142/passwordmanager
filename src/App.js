@@ -31,8 +31,8 @@ function App() {
           <Route path="/" element={<Homepage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/savePassword" element={<PrivateOutlet cookies={cookies}><PasswordRetriever /></PrivateOutlet>} />
-          <Route path="/getPassword" element={<PrivateOutlet cookies={cookies}><SecretsComponent /></PrivateOutlet>} />
+          <Route path="/savePassword" element={<PrivateOutlet cookies={cookies}><SecretsComponent /></PrivateOutlet>} />
+          <Route path="/getPassword" element={<PrivateOutlet cookies={cookies}><PasswordRetriever /></PrivateOutlet>} />
         </Routes>
     </div>
   );

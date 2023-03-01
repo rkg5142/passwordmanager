@@ -1,8 +1,9 @@
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const argon2 = require("argon2");
 
 const cors = require("cors");
 
@@ -22,6 +23,7 @@ const dbConnect = require("./db/dbConnect");
 const User = require("./db/userModel");
 const Secrets = require("./db/secretsModel")
 const auth = require("./auth");
+const secretsModel = require("./db/secretsModel");
 
 
 // execute database connection
@@ -50,43 +52,32 @@ app.get("/", (request, response, next) => {
   next();
 });
 
-// register endpoint
-app.post("/register", (request, response) => {
-  // hash the password
-  bcrypt
-    .hash(request.body.password, 10)
-    .then((hashedPassword) => {
-      // create a new user instance and collect the data
-      const user = new User({
-        email: request.body.email,
-        password: hashedPassword,
-      });
+app.post("/register", async (request, response) => {
+  try {
+    // Hash the password
+    const hashedPassword = await argon2.hash(request.body.hashedPassword);
 
-      // save the new user
-      user
-        .save()
-        // return success if the new user is added to the database successfully
-        .then((result) => {
-          response.status(201).send({
-            message: "User Created Successfully",
-            result,
-          });
-        })
-        // catch error if the new user wasn't added successfully to the database
-        .catch((error) => {
-          response.status(500).send({
-            message: "Error creating user",
-            error,
-          });
-        });
-    })
-    // catch error if the password hash isn't successful
-    .catch((e) => {
-      response.status(500).send({
-        message: "Password was not hashed successfully",
-        e,
-      });
+    // Create a new user instance and collect the data
+    const user = new User({
+      email: request.body.email,
+      password: hashedPassword,
     });
+
+    // Save the new user
+    const result = await user.save();
+    
+    // Return success if the new user is added to the database successfully
+    response.status(201).send({
+      message: "User Created Successfully",
+      result,
+    });
+  } catch (error) {
+    // Catch error if the new user wasn't added successfully to the database
+    response.status(500).send({
+      message: "Error creating user",
+      error,
+    });
+  }
 });
 
 // login endpoint
@@ -97,20 +88,18 @@ app.post("/login", (request, response) => {
     // if email exists
     .then((user) => {
       // compare the password entered and the hashed password found
-      bcrypt
-        .compare(request.body.password, user.password)
+      console.log(request.body.password)
+      argon2
+        .verify(user.password, request.body.password)
 
         // if the passwords match
-        .then((passwordCheck) => {
+        .then((passwordMatch) => {
 
-          // check if password matches
-          if(!passwordCheck) {
+          if (!passwordMatch) {
             return response.status(400).send({
-              message: "Passwords does not match",
-              error,
+              message: "Passwords do not match",
             });
           }
-
           //   create JWT token
           const token = jwt.sign(
             {
@@ -131,7 +120,7 @@ app.post("/login", (request, response) => {
         // catch error if password do not match
         .catch((error) => {
           response.status(400).send({
-            message: "Passwords does not match",
+            message: "Error comparing passwords",
             error,
           });
         });
@@ -163,7 +152,9 @@ app.post("/savePassword", auth, (request, response) => {
         name: request.body.name,
         url: request.body.url,
         password: request.body.password,
+        userId: userId,
       });
+      console.log(secret)
 
       secret.save().then(() => {
         response.status(200).send({
@@ -187,7 +178,6 @@ app.post("/savePassword", auth, (request, response) => {
   }
 });
 
-// add a new endpoint to get password information by name
 app.post("/getPassword", auth, (request, response) => {
   const { name } = request.body;
   const userId = request.user.userId;
@@ -200,15 +190,24 @@ app.post("/getPassword", auth, (request, response) => {
 
     if (userIdFromToken === userId) {
       // user is authenticated and authorized, handle the request
-      // find password information by name
-      Secrets.findOne({ name }, (err, secret) => {
-        if (err || !secret) {
+      // query the database for the password information
+      Secrets.findOne({ name: name, userId: userId }, (error, result) => {
+        if (error) {
+          response.status(500).send({
+            message: "Error getting password information",
+            error,
+          });
+        } else if (!result) {
           response.status(404).send({
             message: "Password information not found",
           });
         } else {
+          // return the password information
           response.status(200).send({
-            password: secret.password,
+            message: "Password information retrieved successfully",
+            name: result.name,
+            url: result.url,
+            password: result.password,
           });
         }
       });

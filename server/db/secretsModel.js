@@ -1,24 +1,23 @@
 const mongoose = require("mongoose");
 
 const SecretsSchema = new mongoose.Schema({
-      name: {
-        type: String,
-        required: [true, "Please provide a name for your password."],
-        unique: [true, "Email Exist"],
-      },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Users",
+    required: true,
+  },
+  name: {
+    type: String,
+    required: true,
+  },
+  url: {
+    type: String,
+    required: true,
+  },
+  password: {
+    type: String,
+    required: true,
+  },
+});
 
-      url: {
-        type: String,
-        required: [true, "Please provide a URL."],
-        unique: [true, "Email Exist"],
-      },
-    
-      password: {
-        type: String,
-        required: [true, "Please provide the password."],
-        unique: false,
-      },
-  })
-
-  module.exports = mongoose.model.Secrets || mongoose.model("Secrets", SecretsSchema);
-  
+module.exports = mongoose.model.Secrets || mongoose.model("Secrets", SecretsSchema);

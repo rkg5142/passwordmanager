@@ -10,7 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "argon2": "^0.30.3",
     "cors": "^2.8.5",
+    "crypto-js": "^4.1.1",
+    "sjcl": "^1.0.8",
     "winston": "^3.8.2"
   }
 }

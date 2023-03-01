@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Form, Button, Alert } from "react-bootstrap";
 import Cookies from 'universal-cookie';
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import LogoutButton from "./LogoutButton";
 
 const cookies = new Cookies();
 
@@ -44,6 +45,7 @@ export default function PasswordForm() {
       <Link to="/savePassword" className="save-password-link">
         Save a new password
       </Link>
+      <LogoutButton />
       <Form onSubmit={handleSubmit}>
         {message && <Alert variant="success">{message}</Alert>}
         {error && <Alert variant="danger">{error}</Alert>}

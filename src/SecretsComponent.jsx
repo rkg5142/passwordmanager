@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import axios from "axios";
 import { Form, Button, Alert } from "react-bootstrap";
 import Cookies from "universal-cookie";
-import { Link, NavLink, Route, Navigate } from "react-router-dom";
-import { ProtectedRoute } from "./PrivateRoute";
+import { Link } from "react-router-dom";
+import LogoutButton from "./LogoutButton";
 
 const cookies = new Cookies();
 
@@ -43,6 +43,7 @@ export default function PasswordForm() {
       <Link to="/getPassword" className="get-password-link">
         View existing passwords
       </Link>
+      <LogoutButton />
           <Form onSubmit={handleSubmit}>
             {message && <Alert variant="success">{message}</Alert>}
             {error && <Alert variant="danger">{error}</Alert>}
