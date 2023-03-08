@@ -17,16 +17,17 @@ export default function Login() {
     e.preventDefault();
 
     //To-do: create key from pwd and store in client
-    // var salt = CryptoJS.lib.WordArray.random(128/8);
+    var salt = CryptoJS.enc.Hex.parse("aabbccddeeff00112233445566778899");
 
     // // Derive a decryption key from the user's password using PBKDF2
-    // var key = generateKey({email, password, salt});
+    var key = generateKey({email, password, salt});
+    console.log('key:', key);
 
-    // // Store the decryption key and salt in localStorage
-    // localStorage.setItem("KEY", key);
+    // // Store the decryption key in localStorage
+    localStorage.setItem("KEY", key);
 
     // // Hash the password before sending to server
-    // const hashedPassword = hashPassword(password);
+    const hashedPassword = hashPassword(password);
 
     const configuration = {
       method: "post",
@@ -45,11 +46,6 @@ export default function Login() {
         cookies.set("TOKEN", result.data.token, {
           path: "/",
         });
-
-        //
-        const key = hashPassword(password);
-
-        localStorage.setItem("KEY", key);
 
         // redirect user to the auth page
         window.location.href = "/getPassword";

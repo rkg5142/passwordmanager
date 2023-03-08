@@ -4,12 +4,14 @@ import { Form, Button, Alert } from "react-bootstrap";
 import Cookies from 'universal-cookie';
 import { Link } from "react-router-dom";
 import LogoutButton from "./LogoutButton";
+import CryptoJS from "crypto-js";
 
 const cookies = new Cookies();
 
 export default function PasswordForm() {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
+  const [url, setURL] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -20,7 +22,7 @@ export default function PasswordForm() {
     const config = {
       headers: { Authorization: `Bearer ${token}` },
     };
-    console.log(token)
+    
     axios
       .post(
         "/getPassword",
@@ -28,7 +30,12 @@ export default function PasswordForm() {
         config
       )
       .then((response) => {
-        setPassword(response.data.password);
+        const encryptedPassword = response.data.password;
+        const key = localStorage.getItem("KEY").toString();
+        const bytes = CryptoJS.AES.decrypt(encryptedPassword, key);
+        const decryptedPassword = bytes.toString(CryptoJS.enc.Utf8);
+        setURL(response.data.url);
+        setPassword(decryptedPassword);
         setMessage("");
         setError("");
       })
@@ -45,6 +52,9 @@ export default function PasswordForm() {
       <Link to="/savePassword" className="save-password-link">
         Save a new password
       </Link>
+      <Link to="/changePassword" className="change-password-link">
+        Change Password
+      </Link>
       <LogoutButton />
       <Form onSubmit={handleSubmit}>
         {message && <Alert variant="success">{message}</Alert>}
@@ -55,6 +65,16 @@ export default function PasswordForm() {
             type="text"
             value={name}
             onChange={(event) => setName(event.target.value)}
+            required
+          />
+        </Form.Group>
+
+        <Form.Group>
+          <Form.Label>URL</Form.Label>
+          <Form.Control
+            type="text"
+            value={url}
+            readOnly
             required
           />
         </Form.Group>

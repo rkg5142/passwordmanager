@@ -59,6 +59,15 @@ button.btn.btn-primary {
   font-size: larger;
 }
 
+.change-password-link {
+  position: absolute;
+  left: 50px;
+  top: 40px;
+  color: white;
+  font-weight: bold;
+  font-size: larger;
+}
+
 .logout-btn {
   position: fixed;
   left: 50px;

@@ -5,6 +5,7 @@ import Login from './Login';
 import Register from './Register';
 import SecretsComponent from './SecretsComponent';
 import PasswordRetriever from './GetSecretsComponent';
+import ChangePassword from './ChangePassword';
 import Homepage from './Home';
 import Cookies from 'universal-cookie';
 
@@ -33,6 +34,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/savePassword" element={<PrivateOutlet cookies={cookies}><SecretsComponent /></PrivateOutlet>} />
           <Route path="/getPassword" element={<PrivateOutlet cookies={cookies}><PasswordRetriever /></PrivateOutlet>} />
+          <Route path="/changePassword" element={<PrivateOutlet cookies={cookies}><ChangePassword /></PrivateOutlet>} />
         </Routes>
     </div>
   );

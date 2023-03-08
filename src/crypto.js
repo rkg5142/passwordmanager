@@ -1,5 +1,6 @@
 import pbkdf2 from "crypto-js/pbkdf2";
 import { AES, enc, SHA256 } from "crypto-js";
+import CryptoJS from "crypto-js";
 
 function hashPassword(password) {
   return String(SHA256(password));
@@ -26,4 +27,15 @@ function encryptVault({ vaultKey, vault }) {
   return AES.encrypt(vault, vaultKey).toString();
 }
 
-export { hashPassword, generateKey, decryptVault, encryptVault };
+const decryptData = (data, key) => {
+  const bytes = CryptoJS.AES.decrypt(data, key);
+  return bytes.toString(CryptoJS.enc.Utf8);
+}
+
+const encryptData = (password, key) => {
+  const encryptedPassword = CryptoJS.AES.encrypt(password, key).toString();
+  return encryptedPassword;
+}
+
+
+export { hashPassword, generateKey, decryptVault, encryptVault, decryptData, encryptData };

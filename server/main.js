@@ -64,7 +64,7 @@ app.post("/register", async (request, response) => {
 
     // Save the new user
     const result = await user.save();
-    
+
     // Return success if the new user is added to the database successfully
     response.status(201).send({
       message: "User Created Successfully",
@@ -83,7 +83,6 @@ app.post("/register", async (request, response) => {
 app.post("/login", (request, response) => {
   // check if email exists
   User.findOne({ email: request.body.email })
-
     // if email exists
     .then((user) => {
       // compare the password entered and the hashed password found
@@ -134,27 +133,38 @@ app.post("/login", (request, response) => {
 });
 
 // add a new endpoint to save password information
+// add a new endpoint to save password information
 app.post("/savePassword", auth, async (request, response) => {
   const { name, url, password } = request.body;
   const userId = request.user.userId;
 
-  const token = request.headers.authorization.split(" ")[1];
+  try {
+    // find the user
+    const user = await User.findById(userId);
 
-    const decodedToken = jwt.verify(token, "RANDOM-TOKEN");
-    const userIdFromToken = decodedToken.userId;
+    // check if the secret already exists
+    const existingSecret = user.secrets.find(
+      (secret) => secret.name === name && secret.url === url
+    );
 
-      const secret = await User.findByIdAndUpdate(
-        userId,
-        {
-          $push: {
-            secrets: {name, url, password}
-          }
-        },
-        {new: true}
-      );
-      response.send(secret);
-    }); 
+    if (existingSecret) {
+      // update the existing secret
+      existingSecret.password = password;
+      await user.save();
 
+      response.send(existingSecret);
+    } else {
+      // add a new secret
+      const newSecret = { name, url, password };
+      user.secrets.push(newSecret);
+      await user.save();
+
+      response.send(newSecret);
+    }
+  } catch (error) {
+    response.status(500).send({ message: "Internal Server Error" });
+  }
+});
 
 
 app.post("/getPassword", auth, async (request, response) => {
@@ -173,6 +183,80 @@ app.post("/getPassword", auth, async (request, response) => {
 
 });
 
+app.get("/getAllPasswords", auth, async (request, response) => {
+  const userId = request.user.userId;
+
+  try {
+    const user = await User.findById(userId);
+    response.send(user.secrets);
+  } catch (error) {
+    response.status(500).send({ message: "Internal Server Error" });
+  }
+});
+
+// change password endpoint
+app.put("/changePassword", auth, async (request, response) => {
+  const { hashedCurrentPassword, hashedNewPassword } = request.body;
+  const userId = request.user.userId;
+
+  try {
+    // find the user
+    const user = await User.findById(userId);
+
+    // compare the old password with the current password
+    const isPasswordMatch = await argon2.verify(user.password, hashedCurrentPassword);
+    if (!isPasswordMatch) {
+      return response.status(400).send({ message: "Invalid password" });
+    }
+
+    // hash the new password and update the user's password
+    const hashedPassword = await argon2.hash(hashedNewPassword);
+    user.password = hashedPassword;
+    await user.save();
+
+    response.send({ message: "Password changed successfully" });
+  } catch (error) {
+    response.status(500).send({ message: "Internal Server Error" });
+  }
+});
+
+app.put("/reencryptPasswords", auth, async (request, response) => {
+  const userId = request.user.userId;
+  const secretsList = request.body;
+  console.log(request.body);
+  console.log(secretsList);
+
+  try {
+    // Find the user
+    const user = await User.findById(userId);
+    console.log(userId);
+
+    // Loop through all the secrets
+    for (let i = 0; i < secretsList.length; i++) {
+      const secret = secretsList[i];
+
+      // Find the corresponding secret in the request body
+      const matchingSecret =  user.secrets.find(
+        (s) => s.name === secret.name && s.url === secret.url
+      );
+
+      if (matchingSecret) {
+        // Update the password with the re-encrypted version
+        matchingSecret.password = secret.password;
+        console.log(matchingSecret.password);
+        console.log(secret.password)
+        // Save the updated user to the DB
+        await user.save();
+      }
+    }
+
+    response.send({ message: "Passwords re-encrypted successfully" });
+  } catch (error) {
+    console.error(error);
+    response.status(500).send({ message: "Internal Server Error" });
+  }
+});
+
 const PORT = process.env.PORT || 8080;
-  
+
 app.listen(PORT, console.log(`Server started on port ${PORT}`));

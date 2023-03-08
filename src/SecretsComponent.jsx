@@ -4,6 +4,7 @@ import { Form, Button, Alert } from "react-bootstrap";
 import Cookies from "universal-cookie";
 import { Link } from "react-router-dom";
 import LogoutButton from "./LogoutButton";
+import CryptoJS from "crypto-js";
 
 const cookies = new Cookies();
 
@@ -22,10 +23,13 @@ export default function PasswordForm() {
       headers: { Authorization: `Bearer ${token}` },
     };
 
+    const key = localStorage.getItem("KEY").toString();
+    const encryptedPassword = CryptoJS.AES.encrypt(password, key).toString();
+
     axios
       .post(
         "/savePassword",
-        { name, url, password },
+        { name, url, password: encryptedPassword },
         config
       )
       .then((response) => {
@@ -34,7 +38,11 @@ export default function PasswordForm() {
       })
       .catch((error) => {
         setMessage("");
-        setError(error.response.data.message);
+        if (error.response && error.response.data) {
+          setError(error.response.data.message);
+        } else {
+          setError("An error occurred while saving the password.");
+        }
       });
   };
 
@@ -43,42 +51,45 @@ export default function PasswordForm() {
       <Link to="/getPassword" className="get-password-link">
         View existing passwords
       </Link>
+      <Link to="/changePassword" className="change-password-link">
+        Change Password
+      </Link>
       <LogoutButton />
-          <Form onSubmit={handleSubmit}>
-            {message && <Alert variant="success">{message}</Alert>}
-            {error && <Alert variant="danger">{error}</Alert>}
-            <Form.Group>
-              <Form.Label>Name</Form.Label>
-              <Form.Control
-                type="text"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                required
-              />
-            </Form.Group>
+      <Form onSubmit={handleSubmit}>
+        {message && <Alert variant="success">{message}</Alert>}
+        {error && <Alert variant="danger">{error}</Alert>}
+        <Form.Group>
+          <Form.Label>Name</Form.Label>
+          <Form.Control
+            type="text"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            required
+          />
+        </Form.Group>
 
-            <Form.Group>
-              <Form.Label>URL</Form.Label>
-              <Form.Control
-                type="text"
-                value={url}
-                onChange={(event) => setUrl(event.target.value)}
-                required
-              />
-            </Form.Group>
+        <Form.Group>
+          <Form.Label>URL</Form.Label>
+          <Form.Control
+            type="text"
+            value={url}
+            onChange={(event) => setUrl(event.target.value)}
+            required
+          />
+        </Form.Group>
 
-            <Form.Group>
-              <Form.Label>Password</Form.Label>
-              <Form.Control
-                type="text"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                required
-              />
-            </Form.Group>
+        <Form.Group>
+          <Form.Label>Password</Form.Label>
+          <Form.Control
+            type="text"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+          />
+        </Form.Group>
 
-            <Button type="submit">Save Password</Button>
-          </Form>
+        <Button type="submit">Save Password</Button>
+      </Form>
     </>
   );
 }
