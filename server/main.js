@@ -135,16 +135,17 @@ app.post("/login", (request, response) => {
 // add a new endpoint to save password information
 // add a new endpoint to save password information
 app.post("/savePassword", auth, async (request, response) => {
-  const { name, url, password } = request.body;
+  const { name, userName, url, password } = request.body;
   const userId = request.user.userId;
 
   try {
     // find the user
     const user = await User.findById(userId);
+    console.log(request.body)
 
     // check if the secret already exists
     const existingSecret = user.secrets.find(
-      (secret) => secret.name === name && secret.url === url
+      (secret) => secret.name === name && secret.url === url && secret.userName == userName
     );
 
     if (existingSecret) {
@@ -155,10 +156,12 @@ app.post("/savePassword", auth, async (request, response) => {
       response.send(existingSecret);
     } else {
       // add a new secret
-      const newSecret = { name, url, password };
+      const newSecret = { name, userName, url, password };
+      console.log(newSecret);
       user.secrets.push(newSecret);
       await user.save();
 
+      console.log(response);
       response.send(newSecret);
     }
   } catch (error) {
@@ -189,6 +192,7 @@ app.get("/getAllPasswords", auth, async (request, response) => {
   try {
     const user = await User.findById(userId);
     response.send(user.secrets);
+    
   } catch (error) {
     response.status(500).send({ message: "Internal Server Error" });
   }
