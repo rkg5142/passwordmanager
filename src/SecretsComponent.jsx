@@ -52,6 +52,8 @@ export default function PasswordForm() {
 
   return (
     <>
+      <div className="auth-form-container">
+      <h2>Save Password</h2>
       <Link to="/getPassword" className="get-password-link">
         View existing passwords
       </Link>
@@ -105,6 +107,7 @@ export default function PasswordForm() {
 
         <Button type="submit">Save Password</Button>
       </Form>
+      </div>
     </>
   );
 }

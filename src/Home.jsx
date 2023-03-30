@@ -9,10 +9,10 @@ function Homepage() {
         <h3>Please login to continue</h3>
       </div>
       <div className='home-buttons'>
-        <Link to="/login">
+        <Link to="/login" className='link-btn'>
           Login Here
         </Link>
-        <Link to="/register">
+        <Link to="/register" className='link-btn'>
           Don't have an account? Register here.
         </Link>
       </div>

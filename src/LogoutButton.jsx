@@ -7,6 +7,7 @@ const LogoutButton = () => {
   const handleLogout = () => {
     // remove the cookie
     cookies.remove("TOKEN");
+    localStorage.removeItem("KEY");
     // redirect user to the login page
     window.location.href = "/login";
   };

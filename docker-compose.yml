@@ -16,11 +16,12 @@ services:
     depends_on:
       - mongodb
   frontend:
-    build: ./client/src
+    build: ./
     ports:
       - "3000:3000"
     volumes:
-      - ./client/src:/app/src
+      - ./:/app/
+      - ./src:/app/src
     stdin_open: true
     tty: true
     depends_on:

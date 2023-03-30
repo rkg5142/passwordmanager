@@ -1,7 +1,6 @@
 const express = require("express");
 const app = express();
 const bodyParser = require("body-parser");
-const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const argon2 = require("argon2");
 
@@ -202,6 +201,7 @@ app.get("/getAllPasswords", auth, async (request, response) => {
 app.put("/changePassword", auth, async (request, response) => {
   const { hashedCurrentPassword, hashedNewPassword } = request.body;
   const userId = request.user.userId;
+  console.log(userId);
 
   try {
     // find the user
@@ -211,6 +211,10 @@ app.put("/changePassword", auth, async (request, response) => {
     const isPasswordMatch = await argon2.verify(user.password, hashedCurrentPassword);
     if (!isPasswordMatch) {
       return response.status(400).send({ message: "Invalid password" });
+    }
+    console.log(user.id);
+    if (user._id.toString() !== userId) {
+      return response.status(401).send({ message: "Unauthorized" });
     }
 
     // hash the new password and update the user's password
@@ -241,7 +245,7 @@ app.put("/reencryptPasswords", auth, async (request, response) => {
 
       // Find the corresponding secret in the request body
       const matchingSecret =  user.secrets.find(
-        (s) => s.name === secret.name && s.url === secret.url
+        (s) => s.name === secret.name && s.url === secret.url && s.userName === secret.userName
       );
 
       if (matchingSecret) {
@@ -249,10 +253,11 @@ app.put("/reencryptPasswords", auth, async (request, response) => {
         matchingSecret.password = secret.password;
         console.log(matchingSecret.password);
         console.log(secret.password)
-        // Save the updated user to the DB
-        await user.save();
+        
       }
     }
+    // Save the updated user to the DB
+    await user.save();
 
     response.send({ message: "Passwords re-encrypted successfully" });
   } catch (error) {

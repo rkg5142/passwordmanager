@@ -20,28 +20,28 @@ export default function ChangePassword() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
+      
         // Hash the passwords before sending them to the server
         const hashedCurrentPassword = hashPassword(currentPassword);
         const hashedNewPassword = hashPassword(newPassword);
-
+      
         const token = cookies.get("TOKEN");
-
+      
         // First, retrieve the encrypted secrets from the server
         const secretsConfig = {
-            method: "get",
-            url: "/getAllPasswords",
-            headers: { Authorization: `Bearer ${token}` },
+          method: "get",
+          url: "/getAllPasswords",
+          headers: { Authorization: `Bearer ${token}` },
         };
         const secretsResponse = await axios(secretsConfig);
-
+      
         const currentKey = localStorage.getItem("KEY").toString();
-        console.log(currentKey);
+        console.log('current key: ', currentKey);
+      
         // Then, decrypt the secrets using the old password
         const decryptedSecrets = [];
         for (let i = 0; i < secretsResponse.data.length; i++) {
           const secret = secretsResponse.data[i];
-          console.log(secretsResponse.data[0]);
           const bytes = CryptoJS.AES.decrypt(secret.password, currentKey);
           const decryptedPassword = bytes.toString(CryptoJS.enc.Utf8);
           decryptedSecrets.push({
@@ -49,60 +49,71 @@ export default function ChangePassword() {
             password: decryptedPassword,
           });
         }
-        console.log(decryptedSecrets);
-
+      
+        // Group the decrypted secrets by their non-username fields
+        const groupedSecrets = {};
+        decryptedSecrets.forEach((secret) => {
+          const { username, ...otherFields } = secret;
+          const key = JSON.stringify(otherFields);
+          if (!groupedSecrets[key]) {
+            groupedSecrets[key] = [];
+          }
+          groupedSecrets[key].push(secret);
+        });
+      
         // Next, update the password for the user
         const passwordConfig = {
-            method: "put",
-            url: "/changePassword",
-            headers: { Authorization: `Bearer ${token}` },
-            data: {
-                email,
-                hashedCurrentPassword,
-                hashedNewPassword,
-            },
+          method: "put",
+          url: "/changePassword",
+          headers: { Authorization: `Bearer ${token}` },
+          data: {
+            email,
+            hashedCurrentPassword,
+            hashedNewPassword,
+          },
         };
         await axios(passwordConfig);
 
         const salt = CryptoJS.enc.Hex.parse("aabbccddeeff00112233445566778899");
-        console.log(newPassword);
 
-        function generateKey({ email, hashedNewPassword, salt }) {
-            return pbkdf2(`${email}:${hashedNewPassword}`, salt, {
-              keySize: 32,
-            }).toString();
-          }
-         // Derive a decryption key from the user's password using PBKDF2
-        const key = generateKey({email, hashedNewPassword, salt});
-
-        // // Store the decryption key in localStorage
-        localStorage.setItem("KEY", key);
-        console.log(localStorage.setItem("KEY", key));
-
+        const newKey = pbkdf2(email,hashedNewPassword,salt,{ keySize: 32 }).toString();
+      
+        // Store the decryption key in localStorage
+        localStorage.setItem("KEY", newKey);
+        console.log('new key:', newKey);
+      
         // Finally, re-encrypt the secrets using the new password
-        const encryptedSecrets = decryptedSecrets.map((secret) => ({
+        const encryptedSecrets = [];
+        Object.values(groupedSecrets).forEach((group) => {
+          // Re-encrypt all entries in the group
+          const groupKey = JSON.stringify(group[0]);
+          const encryptedGroup = group.map((secret) => ({
             ...secret,
-            password: CryptoJS.AES.encrypt(secret.password, key).toString(),
-        }));
-
-
-
+            password: CryptoJS.AES.encrypt(secret.password, newKey).toString(),
+          }));
+          encryptedSecrets.push(...encryptedGroup);
+        });
+      
         // Send the updated secrets back to the server
         const updatedSecretsConfig = {
-            method: "put",
-            url: "/reencryptPasswords",
-            headers: { 
-                Authorization: `Bearer ${token}`},
-            data: encryptedSecrets,
+          method: "put",
+          url: "/reencryptPasswords",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          data: encryptedSecrets,
         };
-        console.log(updatedSecretsConfig.data);
         await axios(updatedSecretsConfig);
-
+        
+        console.log(updatedSecretsConfig)
         setPasswordChanged(true);
-    };
+      };
+      
 
     return (
         <>
+            <div className="auth-form-container">
+            <h2>Change Password</h2>
             <Link to="/getPassword" className="get-password-link">
                 View existing passwords
             </Link>
@@ -156,6 +167,7 @@ export default function ChangePassword() {
                     <p className="text-danger">Your Password Has Not Been Changed</p>
                 )}
             </Form>
+            </div>
         </>
     );
 }

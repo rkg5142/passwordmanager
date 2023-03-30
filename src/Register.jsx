@@ -7,7 +7,9 @@ import { Link } from 'react-router-dom';
 export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [register, setRegister] = useState(false);
+  const [registerSuccess, setRegisterSuccess] = useState(false);
+  const [registerError, setRegisterError] = useState(false);
+
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -23,14 +25,17 @@ export default function Register() {
         hashedPassword,
       },
     };
-    console.log(configuration);
+    console.log('email: ', email, 'password: ', hashedPassword);
     axios(configuration)
       // make the API call
       .then((result) => {
-        setRegister(true);
+        setRegisterSuccess(true);
+        setRegisterError(false);
         window.location.href = "/login";
       })
       .catch((error) => {
+        setRegisterSuccess(false);
+        setRegisterError(true);
         console.error(error);
         error = new Error();
       });
@@ -70,11 +75,15 @@ export default function Register() {
           Register
         </Button>
 
-        {/* display success message */}
-        {register ? (
-          <p className="text-success">You Are Registered Successfully</p>
-        ) : (
-          <p className="text-danger">You Are Not Registered</p>
+        
+         {/* display success message */}
+         {registerSuccess && (
+          <p className="text-success">You are registered successfully</p>
+        )}
+
+        {/* display error message */}
+        {registerError && (
+          <p className="text-danger">There was an issue during registration</p>
         )}
 
       <Link to="/login" className="home-buttons">

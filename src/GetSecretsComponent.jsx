@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { ListGroup, Alert } from "react-bootstrap";
+import { ListGroup, Alert, Form } from "react-bootstrap";
 import Cookies from 'universal-cookie';
 import { Link } from "react-router-dom";
 import LogoutButton from "./LogoutButton";
@@ -11,8 +11,9 @@ const cookies = new Cookies();
 export default function PasswordForm() {
   const [passwords, setPasswords] = useState([]);
   const [error, setError] = useState("");
+  const [searchTerm, setSearchTerm] = useState(""); // new state variable
 
-  const [clickedIndex, setClickedIndex] = useState(-1); // -1 for nothing clicked
+  const [clickedIndex, setClickedIndex] = useState(-1); 
 
   useEffect(() => {
     const token = cookies.get("TOKEN");
@@ -41,6 +42,14 @@ export default function PasswordForm() {
     }
   }
 
+  function handleSearch(event) {
+    setSearchTerm(event.target.value);
+  }
+
+  const filteredPasswords = passwords.filter((password) => {
+    return password.name.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
   return (
     <>
       <div className="get-password">
@@ -52,8 +61,12 @@ export default function PasswordForm() {
       </Link>
       <LogoutButton />
       {error && <Alert variant="danger">{error}</Alert>}
+      <Form>
+        <Form.Control type="text" className="search" placeholder="Search by name" onChange={handleSearch} />
+      </Form>
+      { filteredPasswords.length > 0 ? (
       <ListGroup>
-        {passwords.map((password, index) => {
+        {filteredPasswords.map((password, index) => {
           const encryptedPassword = password.password;
           const key = localStorage.getItem("KEY").toString();
           const bytes = CryptoJS.AES.decrypt(encryptedPassword, key);
@@ -71,6 +84,9 @@ export default function PasswordForm() {
           );
         })}
       </ListGroup>
+      ) : (
+        <p>No matching secrets found</p>
+      )}
     </div> 
     </>
   );

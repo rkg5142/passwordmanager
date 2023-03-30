@@ -5,28 +5,29 @@ import Cookies from "universal-cookie";
 import { hashPassword, generateKey } from "./crypto";
 import { Link } from 'react-router-dom';
 import CryptoJS from "crypto-js";
+import pbkdf2 from "crypto-js/pbkdf2";
 
 const cookies = new Cookies();
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [login, setLogin] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
+  const [loginError, setLoginError] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    //To-do: create key from pwd and store in client
     var salt = CryptoJS.enc.Hex.parse("aabbccddeeff00112233445566778899");
 
-    // // Derive a decryption key from the user's password using PBKDF2
-    var key = generateKey({email, password, salt});
-
-    // // Store the decryption key in localStorage
-    localStorage.setItem("KEY", key);
-
-    // // Hash the password before sending to server
+    // Hash the password before sending to server
     const hashedPassword = hashPassword(password);
+
+    // Derive a decryption key from the user's password using PBKDF2
+    const key = pbkdf2(email,hashedPassword,salt,{ keySize: 32 }).toString();
+
+    // Store the decryption key in local storage
+    localStorage.setItem("KEY", key);
 
     const configuration = {
       method: "post",
@@ -36,24 +37,27 @@ export default function Login() {
         password: hashedPassword,
       },
     };
-    console.log(configuration.data);
-
+    console.log('email: ', email, 'password: ', hashedPassword);
     // make the API call
     axios(configuration)
       .then((result) => {
-        setLogin(true);
+        setLoginSuccess(true);
+        setLoginError(false);
         // set the cookie
         cookies.set("TOKEN", result.data.token, {
           path: "/",
         });
-
+        
         // redirect user to the auth page
         window.location.href = "/getPassword";
       })
       .catch((error) => {
-        console.log(error);
+        setLoginSuccess(false);
+        setLoginError(true);
       });
+      
   };
+  
 
   return (
     <div className="auth-form-container">
@@ -93,11 +97,14 @@ export default function Login() {
       </Button>
 
 
-        {/* display success message */}
-        {login ? (
+         {/* display success message */}
+         {loginSuccess && (
           <p className="text-success">You Are Logged in Successfully</p>
-        ) : (
-          <p className="text-danger">You Are Not Logged in</p>
+        )}
+
+        {/* display error message */}
+        {loginError && (
+          <p className="text-danger">Invalid email or password</p>
         )}
 
       <Link to="/register" className="home-buttons">
