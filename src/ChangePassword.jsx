@@ -39,17 +39,23 @@ export default function ChangePassword() {
         console.log('current key: ', currentKey);
       
         // Then, decrypt the secrets using the old password
-        const decryptedSecrets = [];
-        for (let i = 0; i < secretsResponse.data.length; i++) {
-          const secret = secretsResponse.data[i];
-          const bytes = CryptoJS.AES.decrypt(secret.password, currentKey);
-          const decryptedPassword = bytes.toString(CryptoJS.enc.Utf8);
-          decryptedSecrets.push({
-            ...secret,
-            password: decryptedPassword,
-          });
-        }
-      
+      const decryptedSecrets = [];
+      for (let i = 0; i < secretsResponse.data.length; i++) {
+        const secret = secretsResponse.data[i];
+
+        const passwordBytes = CryptoJS.AES.decrypt(secret.password, currentKey);
+        const decryptedPassword = passwordBytes.toString(CryptoJS.enc.Utf8);
+
+        const memoBytes = CryptoJS.AES.decrypt(secret.memo, currentKey);
+        const decryptedMemo = memoBytes.toString(CryptoJS.enc.Utf8);
+
+        decryptedSecrets.push({
+          ...secret,
+          password: decryptedPassword,
+          memo: decryptedMemo,
+        });
+      }
+
         // Group the decrypted secrets by their non-username fields
         const groupedSecrets = {};
         decryptedSecrets.forEach((secret) => {
@@ -85,11 +91,10 @@ export default function ChangePassword() {
         // Finally, re-encrypt the secrets using the new password
         const encryptedSecrets = [];
         Object.values(groupedSecrets).forEach((group) => {
-          // Re-encrypt all entries in the group
-          const groupKey = JSON.stringify(group[0]);
           const encryptedGroup = group.map((secret) => ({
             ...secret,
             password: CryptoJS.AES.encrypt(secret.password, newKey).toString(),
+            memo: CryptoJS.AES.encrypt(secret.memo, newKey).toString(),
           }));
           encryptedSecrets.push(...encryptedGroup);
         });

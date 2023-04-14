@@ -13,6 +13,10 @@ const SecretsSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  memo: {
+    type: String,
+    required: true,
+  },
 });
 
 module.exports = mongoose.model("Secrets", SecretsSchema);

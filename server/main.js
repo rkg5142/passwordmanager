@@ -134,7 +134,7 @@ app.post("/login", (request, response) => {
 // add a new endpoint to save password information
 // add a new endpoint to save password information
 app.post("/savePassword", auth, async (request, response) => {
-  const { name, userName, url, password } = request.body;
+  const { name, userName, url, password, memo } = request.body;
   const userId = request.user.userId;
 
   try {
@@ -150,17 +150,16 @@ app.post("/savePassword", auth, async (request, response) => {
     if (existingSecret) {
       // update the existing secret
       existingSecret.password = password;
+      existingSecret.memo = memo;
       await user.save();
 
       response.send(existingSecret);
     } else {
       // add a new secret
-      const newSecret = { name, userName, url, password };
-      console.log(newSecret);
+      const newSecret = { name, userName, url, password, memo };
+      console.log("new Secret save:" ,newSecret);
       user.secrets.push(newSecret);
       await user.save();
-
-      console.log(response);
       response.send(newSecret);
     }
   } catch (error) {
@@ -249,8 +248,10 @@ app.put("/reencryptPasswords", auth, async (request, response) => {
       );
 
       if (matchingSecret) {
-        // Update the password with the re-encrypted version
+        // Update the password and memo with the re-encrypted version
         matchingSecret.password = secret.password;
+        matchingSecret.memo = secret.memo;
+        console.log(matchingSecret.password);
         console.log(matchingSecret.password);
         console.log(secret.password)
         

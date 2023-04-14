@@ -13,6 +13,7 @@ export default function PasswordForm() {
   const [url, setUrl] = useState("");
   const [userName, setUserName] = useState("")
   const [password, setPassword] = useState("");
+  const [memo, setMemo] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -27,15 +28,15 @@ export default function PasswordForm() {
 
     const key = localStorage.getItem("KEY").toString();
     const encryptedPassword = CryptoJS.AES.encrypt(password, key).toString();
-
+    const encryptedMemo = CryptoJS.AES.encrypt(memo, key).toString();
+    console.log({ name, userName, url, password: encryptedPassword, memo: encryptedMemo });
     axios
       .post(
         "/savePassword",
-        { name, userName, url, password: encryptedPassword },
+        { name, userName, url, password: encryptedPassword, memo: encryptedMemo },
         config
       )
       .then((response) => {
-        console.log("Submitted Data: ", {name, userName, url, password: encryptedPassword});
         setMessage(response.data.message);
         setError("");
         setSuccess(true);
@@ -101,6 +102,15 @@ export default function PasswordForm() {
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
+            required
+          />
+        </Form.Group>
+        <Form.Group>
+          <Form.Label>Memo</Form.Label>
+          <Form.Control
+            type="memo"
+            value={memo}
+            onChange={(event) => setMemo(event.target.value)}
             required
           />
         </Form.Group>

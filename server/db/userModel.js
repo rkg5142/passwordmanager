@@ -29,6 +29,10 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true,
       },
+      memo: {
+        type: String,
+        required: false,
+      }
     })
   ]
 });
