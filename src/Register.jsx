@@ -7,12 +7,18 @@ import { Link } from 'react-router-dom';
 export default function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [registerSuccess, setRegisterSuccess] = useState(false);
   const [registerError, setRegisterError] = useState(false);
 
-
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    if (password !== confirmPassword) {
+      setRegisterSuccess(false);
+      setRegisterError(true);
+      return;
+    }
 
     // Hash the password before sending it to the server
     const hashedPassword = hashPassword(password);
@@ -67,29 +73,43 @@ export default function Register() {
           />
         </Form.Group>
 
+        <Form.Group controlId="formBasicConfirmPassword">
+          <Form.Label>Confirm Password</Form.Label>
+          <Form.Control
+            type="password"
+            name="confirmPassword"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            placeholder="Confirm Password"
+          />
+        </Form.Group>
+
         <Button
           variant="primary"
           type="submit"
           onClick={(e) => handleSubmit(e)}
+          disabled={!email || !password || !confirmPassword}
         >
           Register
         </Button>
 
-        
-         {/* display success message */}
-         {registerSuccess && (
+        {/* display success message */}
+        {registerSuccess && (
           <p className="text-success">You are registered successfully</p>
         )}
 
         {/* display error message */}
         {registerError && (
-          <p className="text-danger">There was an issue during registration</p>
+          <p className="text-danger">
+            There was an issue during registration
+          </p>
         )}
 
-      <Link to="/login" className="home-buttons">
+        <Link to="/login" className="home-buttons">
           Already have an account? Login here.
-      </Link>
+        </Link>
       </Form>
     </div>
   );
 }
+
